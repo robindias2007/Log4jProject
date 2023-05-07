@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Check for Log4j Attack Payloads</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <h1>Check for Log4j Attack Payloads</h1>
+  <form action="" method="post">
+    {% csrf_token %}
+    <label for="text_input">Input text:</label>
+      <input type="text" id="text_input" name="text_input" required>
+    <button type="submit">Check</button>
+  </form>
+  <div id="result"></div>
+</body>
+</html>

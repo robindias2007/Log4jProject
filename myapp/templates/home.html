@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Web Application Firewall</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- Font Awesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="{% url 'home' %}">LogServerShield</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'scan_log4j' %}">Log4j Scanner</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'ec2_instance_list' %}"> Server Monitoring</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-user-circle"></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+<!--            <h6 class="dropdown-header">User Profile</h6>-->
+            <a class="dropdown-item" href="#">Profile</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container-fluid mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-center mb-5">The Log4j Apocalypse: What You Need to Know</h1>
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-5">Introduction</h4>
+                    <p class="card-text">The Log4j vulnerability (CVE-2021-44228) is a critical remote code execution vulnerability that is wreaking havoc on servers around the world. This vulnerability affects many applications using the Log4j library, allowing attackers to execute arbitrary code on the affected system by sending a specially crafted request to a vulnerable Log4j server. With Log4j being widely used in many applications and frameworks, including Apache, Spring, and Log4j itself, this vulnerability is widespread and dangerous.</p>
+                </div>
+            </div>
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-5">Severity</h4>
+                    <p class="card-text">The Log4j vulnerability has been classified as a critical vulnerability with a severity score of 10 out of 10 by the National Vulnerability Database (NVD). This means that the vulnerability has a high risk of exploitation, can have a severe impact on the confidentiality, integrity, and availability of the system, and is easy to exploit. In short, this vulnerability is a nightmare for system administrators and users alike.</p>
+                </div>
+            </div>
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-5">Preventive Measures</h4>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Upgrade Log4j library to version 2.15.0 or later.</li>
+                        <li class="list-group-item">Disable JNDI lookups by setting the system property "log4j2.formatMsgNoLookups" to true.</li>
+                        <li class="list-group-item">Block network traffic on port 88 (the default port used by Log4j servers) using a firewall or security group.</li>
+                        <li class="list-group-item">Apply the latest security patches and updates for all software and operating systems.</li>
+                        <li class="list-group-item">Regularly scan your systems and applications for vulnerabilities.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-5">Mitigation Strategies</h4>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Immediately disconnect the affected system from the network to prevent further exploitation.</li>
+                        <li class="list-group-item">Apply the latest security patches and updates for all software and operating systems.</li>
+                        <li class="list-group-item">Disable the affected Log4j server or switch to a different logging framework if possible.</li>
+                        <li class="list-group-item">Monitor network traffic for signs of exploitation, including unexpected network traffic to port 88.</li>
+                        <li class="list-group-item">Regularly review and update security policies and procedures.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
