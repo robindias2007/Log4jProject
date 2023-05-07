@@ -1,0 +1,7 @@
+This is a test log message.
+[DEBUG] 2022-01-01 00:00:00,000 com.example.app - This is a debug log message.
+[INFO] 2022-01-01 00:00:00,000 com.example.app - This is an info log message.
+[WARN] 2022-01-01 00:00:00,000 com.example.app - This is a warning log message.
+[ERROR] 2022-01-01 00:00:00,000 com.example.app - This is an error log message.
+[FATAL] 2022-01-01 00:00:00,000 com.example.app - This is a fatal log message.
+2022-01-01 12:00:00,000 [main] INFO org.apache.logging.log4j.LogManager - Found log4j string: dGhpcyBpcyBhIHRlc3QgbG9nNWowIHRyYW5zbGF0aW9u

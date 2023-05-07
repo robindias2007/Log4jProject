@@ -1,10 +1,20 @@
+<!-- log4j_scan_results.html -->
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Log4j Scan Results</title>
 </head>
 <body>
-<p>The result is: {{ result }}</p>
+    {% if log4j_strings %}
+        <p>The following Log4j strings were found in the uploaded file:</p>
+        <ul>
+        {% for log4j_string in log4j_strings %}
+            <li>{{ log4j_string }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No Log4j strings were found in the uploaded file.</p>
+    {% endif %}
 </body>
 </html>

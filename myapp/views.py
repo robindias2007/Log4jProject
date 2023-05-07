@@ -4,11 +4,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required,user_passes_test
 import socket
 import ssl
-from log4jscanner import Log4jScanner
 import re
 from django.http import JsonResponse
 import boto3
 import psutil
+import pdb
 
 
 def is_admin(user):
@@ -26,7 +26,6 @@ ec2_client = session.client('ec2')
 def get_cpu_utilization(instance_id):
     cpu_percent = psutil.cpu_percent(interval=1)
     return cpu_percent
-
 
 def get_ec2_instances():
     # Fetch the list of all EC2 instances
@@ -79,29 +78,67 @@ def ec2_instance_list(request):
     return render(request, 'ec2_instance_list.html', {'instances': instances})
 
 def scan_log4j(request):
+    # Get the uploaded file from the request
     if request.method == 'POST':
-        ip_address = request.POST.get('ip_address')
-        if ip_address:
-            try:
-                # Open a socket to the target IP address on port 443
-                context = ssl.create_default_context()
-                with socket.create_connection((ip_address, 443)) as sock:
-                    with context.wrap_socket(sock, server_hostname=ip_address) as ssock:
-                        # Send a test request to the server
-                        ssock.sendall(b"GET / HTTP/1.1\r\nHost: " + ip_address.encode('utf-8') + b"\r\n\r\n")
-                        response = ssock.recv(1024)
-                        # Check if the response contains the string "Apache Log4j"
-                        if b"Apache Log4j" in response:
-                            return HttpResponse("IP address is vulnerable")
-                            # return render(request, 'vulnerable.html', {'ip_address': ip_address})
-                        else:
-                            return HttpResponse("IP address is not vulnerable")
-                            # return render(request, 'not_vulnerable.html', {'ip_address': ip_address})
-            except Exception as e:
-                # An exception occurred, so the IP address is likely not vulnerable
-                return HttpResponse("IP address is not vulnerable excep")
-                #return render(request, 'not_vulnerable.html', {'ip_address': ip_address})
+        #uploaded_file = request.FILES.get('my_file')
+        with open('log4j_test_file.txt', 'r') as f:
+            content = f.read()
+            # Define regular expression pattern to match log4j strings
+            # Pattern 1: Base64 encoded strings separated by optional pipe symbols
+            log4j_pattern1 = r'\b[A-Za-z0-9+/]{1,}={0,2}\s*(?:\|\s*)?[A-Za-z0-9+/]{1,}={0,2}\s*(?:\|\s*)?[A-Za-z0-9+/]{1,}={0,2}\b'
+
+            # Pattern 2: Unicode escape sequences or base64 encoded strings separated by optional pipe symbols
+            log4j_pattern2 = r'((?:(?<!\\)\\(?:\\\\)*+(?:\\u[a-fA-F0-9]{4}|\\x[a-fA-F0-9]{2}))|[a-zA-Z0-9+/]{4}[AQgw]==)(\s+)?(\|\s+)?[^\s]*'
+
+            # Pattern 3: Strings containing a specific HTTP method followed by a path that matches certain keywords
+            log4j_pattern3 = r'\[(.*?)\].*?"(?:GET|POST|HEAD|PUT|DELETE|OPTIONS) (.*?)/(?:jmx-console|web-console|invoker|admin-console|web-inf).*?"'
+
+            # Pattern 4: Strings containing references to log4j or log4shell configuration files with URLs that start with "http" or "https"
+            log4j_pattern4 = r'(?i)(?:log4j|log4shell)\.(?:appender|logger|rootLogger|fileAppender|layout)\s*?[=(:].*?https?:\/\/.*?'
+
+            # Pattern 5: Strings containing references to JMX, RMI, or JNDI that could be used for remote code execution
+            log4j_pattern5 = r'(?i)(?:jmxremote|jmxrmi|jndi|rmi)\s*?(?::|\/).*?(?:jmxrmi|jmxremote|ClassLoader|ObjectInput|ObjectOutput|Protocol)'
+
+            patterns = [log4j_pattern1, log4j_pattern2, log4j_pattern3, log4j_pattern4, log4j_pattern5]
+
+            log4j_strings = re.findall(log4j_pattern5,content)
+            #pdb.set_trace()
+            if log4j_strings:
+                print("Pattern Found")
+                #print(log4j_strings)
+                #return render(request, 'result.html', {'log4j_strings': log4j_strings})
+            else:
+                print("Pattern not found")
+
+            # Read contents of the uploaded file
     return render(request, 'scan_log4j.html')
+
+
+
+# def scan_log4j(request):
+#     if request.method == 'POST':
+#         ip_address = request.POST.get('ip_address')
+#         if ip_address:
+#             try:
+#                 # Open a socket to the target IP address on port 443
+#                 context = ssl.create_default_context()
+#                 with socket.create_connection((ip_address, 443)) as sock:
+#                     with context.wrap_socket(sock, server_hostname=ip_address) as ssock:
+#                         # Send a test request to the server
+#                         ssock.sendall(b"GET / HTTP/1.1\r\nHost: " + ip_address.encode('utf-8') + b"\r\n\r\n")
+#                         response = ssock.recv(1024)
+#                         # Check if the response contains the string "Apache Log4j"
+#                         if b"Apache Log4j" in response:
+#                             return HttpResponse("IP address is vulnerable")
+#                             # return render(request, 'vulnerable.html', {'ip_address': ip_address})
+#                         else:
+#                             return HttpResponse("IP address is not vulnerable")
+#                             # return render(request, 'not_vulnerable.html', {'ip_address': ip_address})
+#             except Exception as e:
+#                 # An exception occurred, so the IP address is likely not vulnerable
+#                 return HttpResponse("IP address is not vulnerable excep")
+#                 #return render(request, 'not_vulnerable.html', {'ip_address': ip_address})
+#     return render(request, 'scan_log4j.html')
 
 
 def log4_check(request):
@@ -153,3 +190,19 @@ def LoginPage(request):
 def LogoutPage(request):
     logout(request)
     return redirect('login')
+
+def send_email(message):
+    email_sender = "robindias2007@gmail.com"
+    email_password = "icikeraihfdmwyms"
+    email_receiver = "robindias2007@gmail.com"
+    subject = "Test email"
+    body = "Hello, this is a test email sent from Python using SMTP!"
+    em = EmailMessage()
+    em["From"] = email_sender
+    em["To"] = email_receiver
+    em["Subject"] = subject
+    em.set_content(body)
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
+        print("Email sent successfully!")

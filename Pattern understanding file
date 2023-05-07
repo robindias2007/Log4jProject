@@ -1,0 +1,22 @@
+1) r'((?:(?<!\\)\\(?:\\\\)*+(?:\\u[a-fA-F0-9]{4}|\\x[a-fA-F0-9]{2}))|[a-zA-Z0-9+/]{4}[AQgw]==)(\s+)?(\|\s+)?(?:.*(?:jmxremote|bind|template=)|.*?\b(?:pwned|pass|creds|password|cmd|command|exec|os|rhost|rport)\b.*?)'
+
+Here's a breakdown of the modified pattern:
+
+((?:(?<!\\)\\(?:\\\\)*+(?:\\u[a-fA-F0-9]{4}|\\x[a-fA-F0-9]{2}))|[a-zA-Z0-9+/]{4}[AQgw]==) - This part of the pattern remains the same as before. It matches Base64-encoded strings and Unicode escape sequences.
+(\s+)?(\|\s+)? - This part of the pattern also remains the same. It matches any optional whitespace and '|' characters that follow the encoded string.
+(?:.*(?:jmxremote|bind|template=)|.*?\b(?:pwned|pass|creds|password|cmd|command|exec|os|rhost|rport)\b.*?) - This part of the pattern is new and is used to match Log4Shell-specific payloads and strings. It consists of two parts separated by the '|' character.
+The first part matches any characters that precede the Log4j payload or string. It looks for the words "jmxremote", "bind", or "template=" anywhere in the text.
+The second part looks for specific words that are commonly used in Log4Shell attacks, such as "pwned", "pass", "creds", "password", "cmd", "command", "exec", "os", "rhost", or "rport". The \b symbols indicate word boundaries, so the regular expression only matches these words if they appear as standalone words in the text. The .*? at the end matches any remaining characters in the text until the next whitespace or '|' character.
+
+2) r'((?:(?<!\\)\\(?:\\\\)*+(?:\\u[a-fA-F0-9]{4}|\\x[a-fA-F0-9]{2}))|[a-zA-Z0-9+/]{4}[AQgw]==)(\s+)?(\|\s+)?[^\s]*'
+Here's a breakdown of the pattern:
+
+r' - The pattern is a raw string literal, indicated by the 'r' at the beginning. This is used to prevent Python from interpreting backslashes as escape characters in the string.
+( - Begin capturing group 1.
+(?:(?<!\\)\\(?:\\\\)*+(?:\\u[a-fA-F0-9]{4}|\\x[a-fA-F0-9]{2})) - This matches any Unicode escape sequence or backslash character that is not followed by another backslash character. This ensures that escaped backslashes themselves are not matched. The ?: at the beginning of the group indicates that it is a non-capturing group.
+| - OR operator, used to match either the Unicode escape sequence or Base64-encoded string.
+[a-zA-Z0-9+/]{4}[AQgw]== - Matches Base64-encoded strings. It matches four characters in the set [a-zA-Z0-9+/] followed by one of the four characters in [AQgw], which are padding characters used in Base64 encoding, followed by two equal signs.
+) - End capturing group 1.
+(\s+)? - Optionally matches one or more whitespace characters.
+(\|\s+)? - Optionally matches '|' character followed by one or more whitespace characters.
+[^\s]* - Matches any non-whitespace characters that follow.
