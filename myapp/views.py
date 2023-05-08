@@ -11,6 +11,8 @@ import psutil
 import pdb
 from django.core.mail import EmailMessage
 import smtplib
+import docker
+import paramiko
 
 
 def is_admin(user):
@@ -65,7 +67,7 @@ def get_cpu_utilization(instance_id):
 #     return instances
 
 @user_passes_test(is_admin)
-def ec2_instance_list(request):
+def ec2_instance_lists(request):
     # Fetch the list of all EC2 instances
     #instances = get_ec2_instances()
     ecs_client = session.client('ecs')
@@ -220,3 +222,39 @@ def send_email(request):
     # clean up
     smtp_connection.quit()
     return HttpResponse("EMAIL SENT")
+
+
+def ec2_instance_list(request):
+
+    ec2_client = session.client('ec2')
+    ec2_instance_id = 'i-0a5a0f239993d1666'
+    response = ec2_client.describe_instances(InstanceIds=[ec2_instance_id])
+    ec2_public_ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
+    ec2_private_key_path = '/Users/robindias/Desktop/Project/CyberSecurity/server_key.cer'
+
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.connect(hostname=ec2_public_ip, username='ec2-user', key_filename=ec2_private_key_path)
+    stdin, stdout, stderr = ssh_client.exec_command('docker ps -a')
+
+    container_info = []
+
+    for line in stdout:
+        fields = line.strip().split()
+        if fields[0] != 'CONTAINER':
+            container_id = fields[0]
+            container_name = fields[-1]
+            container_os = fields[1]
+            container_status = fields[7]
+            container_dict = {
+                'id': container_id,
+                'name': container_name,
+                'os' : container_os,
+                'status': container_status,
+            }
+
+            container_info.append(container_dict)
+
+    ssh_client.close()
+    return render(request, 'ec2_instance_list.html', {'container_info': container_info})
+

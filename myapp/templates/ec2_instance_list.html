@@ -1,44 +1,42 @@
-<div class="container">
-  <h2>EC2 Instance List</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Instance ID</th>
-        <th>Type</th>
-        <th>State</th>
-        <th>Public IP</th>
-        <th>Private IP</th>
-        <th>Launch Time</th>
-        <th>CPU Utilization</th>
-        <th>Memory Utilization</th>
-        <th>Disk Usage</th>
-        <th>Network I/O</th>
-<!--        <th>Stop Instance</th>-->
-      </tr>
-    </thead>
-    <tbody>
-<!--      {% for instance in container_info %}-->
-<<
-      <tr>
-<!--        <td>{{ instance.id }}</td>-->
-<!--        <td>{{ instance.type }}</td>-->
-<!--        <td>{{ instance.state }}</td>-->
-<!--        <td>{{ instance.public_ip }}</td>-->
-<!--        <td>{{ instance.private_ip }}</td>-->
-<!--        <td>{{ instance.launch_time }}</td>-->
-<!--        <td>{{ instance.cpu_utilization }}</td>-->
-<!--        <td>{{ instance.memory_utilization }}</td>-->
-<!--        <td>{{ instance.disk_usage }}</td>-->
-<!--        <td>{{ instance.network_io }}</td>-->
-<!--        <td>-->
-<!--          <form method="post">-->
-<!--              {% csrf_token %}-->
-<!--              <input type="hidden" name="instance_id" value="{{ instance.id }}">-->
-<!--              <button type="submit" class="btn btn-danger">Stop</button>-->
-<!--          </form>-->
-<!--        </td>-->
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Virtual Machine Information</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1>Container Info</h1>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Operating System Name</th>
+                    <th>Status</th>
+<!--                    <th>CPU Usage</th>-->
+<!--                    <th>Memory Usage</th>-->
+<!--                    <th>Network info</th>-->
+                </tr>
+            </thead>
+            <tbody>
+                {% for container in container_info %}
+                    <tr>
+                        <td>{{ container.id }}</td>
+                        <td>{{ container.name }}</td>
+                        <td>{{ container.os }}</td>
+                        <td>{{ container.status }}</td>
+<!--                        <td>{{ container.cpu_usage }}</td>-->
+<!--                        <td>{{ container.memory_usage }}</td>-->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Include Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
