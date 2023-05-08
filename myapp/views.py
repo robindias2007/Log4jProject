@@ -9,14 +9,16 @@ from django.http import JsonResponse
 import boto3
 import psutil
 import pdb
+from django.core.mail import EmailMessage
+import smtplib
 
 
 def is_admin(user):
     return user.is_authenticated and user.is_superuser
 
 session = boto3.Session(
-    aws_access_key_id='AKIAWOSMGA3CLMRQPM7S',
-    aws_secret_access_key='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',
+    aws_access_key_id='AKIA3YWLQ2ROZY5WJH53',
+    aws_secret_access_key='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',
     region_name='eu-west-2'
 )
 
@@ -27,55 +29,59 @@ def get_cpu_utilization(instance_id):
     cpu_percent = psutil.cpu_percent(interval=1)
     return cpu_percent
 
-def get_ec2_instances():
-    # Fetch the list of all EC2 instances
-    response = ec2_client.describe_instances()
-
-    # Extract the list of instances and their statuses from the response
-    instances = []
-    for reservation in response['Reservations']:
-        for instance in reservation['Instances']:
-            instance_id = instance['InstanceId']
-            instance_type = instance['InstanceType']
-            # instance_state = instance['State']['Name']
-            # public_ip = instance.get('PublicIpAddress', 'N/A')
-            # private_ip = instance.get('PrivateIpAddress', 'N/A')
-            # launch_time = instance['LaunchTime'].strftime('%Y-%m-%d %H:%M:%S')
-            # cpu_utilization = get_cpu_utilization(instance_id)
-
-            instances.append({
-                'id': instance_id,
-                'type': instance_type
-                # 'state': instance_state,
-                # 'public_ip': public_ip,
-                # 'private_ip': private_ip,
-                # 'launch_time': launch_time,
-                # 'cpu_utilization': cpu_utilization,  # Replace with actual value
-                # 'memory_utilization': 'N/A',  # Replace with actual value
-                # 'disk_usage': 'N/A',  # Replace with actual value
-                # 'network_io': 'N/A'  # Replace with actual value
-            })
-
-        # Refresh the list of instances after stopping the selected instance
-        instances = get_ec2_instances()
-
-    return instances
+# def get_ec2_instances():
+#     # Fetch the list of all EC2 instances
+#     pdb.set_trace()
+#     response = ec2_client.describe_instances()
+#
+#     # Extract the list of instances and their statuses from the response
+#     instances = []
+#     for reservation in response['Reservations']:
+#         for instance in reservation['Instances']:
+#             instance_id = instance['InstanceId']
+#             instance_type = instance['InstanceType']
+#             # instance_state = instance['State']['Name']
+#             # public_ip = instance.get('PublicIpAddress', 'N/A')
+#             # private_ip = instance.get('PrivateIpAddress', 'N/A')
+#             # launch_time = instance['LaunchTime'].strftime('%Y-%m-%d %H:%M:%S')
+#             # cpu_utilization = get_cpu_utilization(instance_id)
+#
+#             instances.append({
+#                 'id': instance_id,
+#                 'type': instance_type
+#                 # 'state': instance_state,
+#                 # 'public_ip': public_ip,
+#                 # 'private_ip': private_ip,
+#                 # 'launch_time': launch_time,
+#                 # 'cpu_utilization': cpu_utilization,  # Replace with actual value
+#                 # 'memory_utilization': 'N/A',  # Replace with actual value
+#                 # 'disk_usage': 'N/A',  # Replace with actual value
+#                 # 'network_io': 'N/A'  # Replace with actual value
+#             })
+#
+#         # Refresh the list of instances after stopping the selected instance
+#         instances = get_ec2_instances()
+#
+#     return instances
 
 @user_passes_test(is_admin)
 def ec2_instance_list(request):
     # Fetch the list of all EC2 instances
-    instances = get_ec2_instances()
-
-    # if request.method == 'POST':
-    #     # Stop the selected EC2 instance
-    #     instance_id = request.POST.get('instance_id')
-    #     ec2_client = boto3.client('ec2')
-    #     ec2_client.stop_instances(InstanceIds=[instance_id])
-    #
-    #     # Refresh the list of instances after stopping the selected instance
-    #     instances = get_ec2_instances()
-    # Render the instances list in an HTML table
-    return render(request, 'ec2_instance_list.html', {'instances': instances})
+    #instances = get_ec2_instances()
+    ecs_client = session.client('ecs')
+    response = ecs_client.list_tasks()
+    tasks = response['taskArns']
+    container_info = []
+    for task in tasks:
+        task_info = ecs_client.describe_tasks(tasks=[task])
+        containers = task_info['tasks'][0]['containers']
+        for container in containers:
+            container_info.append({
+                'task_id': task_info['tasks'][0]['taskArn'],
+                'container_name': container['name'],
+                'container_id': container['dockerId']
+            })
+    return render(request, 'ec2_instance_list.html', {'instances': container_info})
 
 def scan_log4j(request):
     # Get the uploaded file from the request
@@ -182,7 +188,7 @@ def LoginPage(request):
             login(request,user)
             return redirect('home')
         else:
-            return HttpResponse("Username or Password is incorrect!!")
+            return HttpResponse("Invalid username or password.")
 
     return render(request, 'login.html')
 
@@ -191,18 +197,26 @@ def LogoutPage(request):
     logout(request)
     return redirect('login')
 
-def send_email(message):
-    email_sender = "robindias2007@gmail.com"
-    email_password = "icikeraihfdmwyms"
-    email_receiver = "robindias2007@gmail.com"
-    subject = "Test email"
-    body = "Hello, this is a test email sent from Python using SMTP!"
-    em = EmailMessage()
-    em["From"] = email_sender
-    em["To"] = email_receiver
-    em["Subject"] = subject
-    em.set_content(body)
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login(email_sender, email_password)
-        smtp.sendmail(email_sender, email_receiver, em.as_string())
-        print("Email sent successfully!")
+def send_email(request):
+    # set up the SMTP connection
+    smtp_server = 'smtp.gmail.com'
+    smtp_port = 587
+    smtp_username = 'robindias2007@gmail.com'
+    smtp_password = "icikeraihfdmwyms"
+    smtp_connection = smtplib.SMTP(smtp_server, smtp_port)
+    smtp_connection.starttls()
+    smtp_connection.login(smtp_username, smtp_password)
+
+    # set up the email message
+    sender = 'robindias2007@gmail.com'
+    recipient = 'robindias2007@gmail.com'
+    subject = 'Test email'
+    body = 'This is a test email sent from Python!'
+    message = f"From: {sender}\nTo: {recipient}\nSubject: {subject}\n\n{body}"
+
+    # send the email
+    smtp_connection.sendmail(sender, recipient, message)
+
+    # clean up
+    smtp_connection.quit()
+    return HttpResponse("EMAIL SENT")

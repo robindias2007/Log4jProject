@@ -19,13 +19,14 @@ from myapp import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.SignupPage,name='signup'),
+    path('signup/', views.SignupPage,name='signup'),
     path('login/', views.LoginPage,name='login'),
     path('home/', views.HomePage,name='home'),
     path('logout/', views.LogoutPage,name='logout'),
     path('scan_log4j/', views.scan_log4j,name='scan_log4j'),
     path('log4_check/', views.log4_check,name='log4_check'),
-    path('ec2_instance_list/', views.ec2_instance_list,name='ec2_instance_list')
+    path('ec2_instance_list/', views.ec2_instance_list,name='ec2_instance_list'),
+    path('send_email/', views.send_email,name='send_email')
 ]
 
 # urlpatterns = [
