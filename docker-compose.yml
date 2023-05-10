@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  container1:
+    image: alpine
+    mem_limit: 50m
+    command: sleep 3600
+  container2:
+    image: busybox
+    mem_limit: 50m
+    command: sleep 3600
+  container3:
+    image: ubuntu
+    mem_limit: 50m
+    command: sleep 3600
+  container4:
+    image: debian
+    mem_limit: 50m
+    command: sleep 3600
+

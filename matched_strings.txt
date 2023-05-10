@@ -1,0 +1,49 @@
+2022
+01 00
+000
+main
+INFO org
+apache
+logging
+log4j
+core
+LoggerContext
+main
+Using configuration file
+path/to/log4j2
+xml
+2022
+01 00
+000
+main
+WARN com
+example
+SomeClass
+main
+This is a
+warning log message
+2022
+01 00
+000
+main
+ERROR com
+example
+AnotherClass
+main
+This is an
+error log message
+containing a CVE
+2021
+44228 payload
+jmxremote
+rmi
+port=1099 jmxremote
+ssl=false jmxremote
+authenticate=false java
+rmi
+server
+hostname=localhost java
+rmi
+server
+codebase=http
+localhost

@@ -13,84 +13,63 @@ from django.core.mail import EmailMessage
 import smtplib
 import docker
 import paramiko
+import os
 
 
 def is_admin(user):
     return user.is_authenticated and user.is_superuser
 
-session = boto3.Session(
-    aws_access_key_id='AKIA3YWLQ2ROZY5WJH53',
-    aws_secret_access_key='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',
-    region_name='eu-west-2'
-)
-
-# Create a Boto3 EC2 client
-ec2_client = session.client('ec2')
-
-def get_cpu_utilization(instance_id):
-    cpu_percent = psutil.cpu_percent(interval=1)
-    return cpu_percent
-
-# def get_ec2_instances():
-#     # Fetch the list of all EC2 instances
-#     pdb.set_trace()
-#     response = ec2_client.describe_instances()
+# session = boto3.Session(
+#     aws_access_key_id='AKIA3YWLQ2ROZY5WJH53',
+#     aws_secret_access_key='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',
+#     region_name='eu-west-2'
+# )
 #
-#     # Extract the list of instances and their statuses from the response
-#     instances = []
-#     for reservation in response['Reservations']:
-#         for instance in reservation['Instances']:
-#             instance_id = instance['InstanceId']
-#             instance_type = instance['InstanceType']
-#             # instance_state = instance['State']['Name']
-#             # public_ip = instance.get('PublicIpAddress', 'N/A')
-#             # private_ip = instance.get('PrivateIpAddress', 'N/A')
-#             # launch_time = instance['LaunchTime'].strftime('%Y-%m-%d %H:%M:%S')
-#             # cpu_utilization = get_cpu_utilization(instance_id)
-#
-#             instances.append({
-#                 'id': instance_id,
-#                 'type': instance_type
-#                 # 'state': instance_state,
-#                 # 'public_ip': public_ip,
-#                 # 'private_ip': private_ip,
-#                 # 'launch_time': launch_time,
-#                 # 'cpu_utilization': cpu_utilization,  # Replace with actual value
-#                 # 'memory_utilization': 'N/A',  # Replace with actual value
-#                 # 'disk_usage': 'N/A',  # Replace with actual value
-#                 # 'network_io': 'N/A'  # Replace with actual value
-#             })
-#
-#         # Refresh the list of instances after stopping the selected instance
-#         instances = get_ec2_instances()
-#
-#     return instances
-
-@user_passes_test(is_admin)
-def ec2_instance_lists(request):
-    # Fetch the list of all EC2 instances
-    #instances = get_ec2_instances()
-    ecs_client = session.client('ecs')
-    response = ecs_client.list_tasks()
-    tasks = response['taskArns']
-    container_info = []
-    for task in tasks:
-        task_info = ecs_client.describe_tasks(tasks=[task])
-        containers = task_info['tasks'][0]['containers']
-        for container in containers:
-            container_info.append({
-                'task_id': task_info['tasks'][0]['taskArn'],
-                'container_name': container['name'],
-                'container_id': container['dockerId']
-            })
-    return render(request, 'ec2_instance_list.html', {'instances': container_info})
+# # Create a Boto3 EC2 client
+# ec2_client = session.client('ec2')
 
 def scan_log4j(request):
+    keywords = [ '${jndi:', 'java.naming.factory.initial', 'java.naming.provider.url', 'jndiLookup', 'log4j.appender', 'log4j.configuration', 'log4j.logger', 'log4j.rootLogger', 'rmi://', 'ldap://', 'javax.script', 'org.apache.log4j.','jndi','ldap','${jndi', 'log4j2.loggerContext', 'log4j2.formatMsgNoLookups', 'jmsConnectionFactory', 'JMSProducer', 'JMSConsumer', 'InitialContext', 'UnicastRemoteObject', 'MarshalledObject', 'javax.jms.ObjectMessage', 'javax.jms.BytesMessage', 'javax.jms.StreamMessage', 'javax.jms.MapMessage', 'org.apache.logging.log4j.core.appender.db.jdbc.DriverManagerConnectionSource', 'org.apache.logging.log4j.core.appender.db.jdbc.DataSourceConnectionSource', 'org.apache.logging.log4j.core.config.plugins.convert.TypeConverters', 'org.apache.logging.log4j.core.impl.ContextAnchor', 'org.apache.logging.log4j.core.impl.JdkMapAdapterStringMap', 'org.apache.logging.log4j.core.impl.Log4jContextFactory', 'org.apache.logging.log4j.core.util.Closer', 'org.apache.logging.log4j.core.util.Loader' ]
+    if request.method == 'POST':
+        #pdb.set_trace()
+        #uploaded_file = request.FILES.get('my_file')
+        file = request.FILES['my_file']
+
+        # Open the text file to search
+
+        with open('example.txt', 'r') as f:
+            content = f.read()
+
+        # Search for the keywords in the text file
+        matches = []
+        for keyword in keywords:
+            pattern = re.compile(keyword, re.IGNORECASE)
+            match = pattern.search(content)
+            if match:
+                matches.append(match.group(0))
+
+        # Print the matched keywords
+        if matches:
+            print('Matched keywords:')
+            for match in matches:
+                print(match)
+            return render(request, 'result.html', {'log4j_strings': matches})
+        else:
+            print('No matches found')
+
+    return render(request, 'scan_log4j.html')
+
+def scan_log4jj(request):
     # Get the uploaded file from the request
     if request.method == 'POST':
         #uploaded_file = request.FILES.get('my_file')
-        with open('log4j_test_file.txt', 'r') as f:
+        with open('log4_one_five.txt', 'r') as f:
+
             content = f.read()
+
+            pattern = r'\$\{jndi:(ldap[s]?|rmi)://[^\n]+'
+
+            pattern2 = r'(?i)log4j\.(?:appender|logger|rootLogger|fileAppender|layout)\s*?[=(:].*?https?:\/\/.*?'
             # Define regular expression pattern to match log4j strings
             # Pattern 1: Base64 encoded strings separated by optional pipe symbols
             log4j_pattern1 = r'\b[A-Za-z0-9+/]{1,}={0,2}\s*(?:\|\s*)?[A-Za-z0-9+/]{1,}={0,2}\s*(?:\|\s*)?[A-Za-z0-9+/]{1,}={0,2}\b'
@@ -109,56 +88,17 @@ def scan_log4j(request):
 
             patterns = [log4j_pattern1, log4j_pattern2, log4j_pattern3, log4j_pattern4, log4j_pattern5]
 
-            log4j_strings = re.findall(log4j_pattern5,content)
+            log4j_strings = re.findall(pattern2,content)
             #pdb.set_trace()
             if log4j_strings:
                 print("Pattern Found")
                 #print(log4j_strings)
-                #return render(request, 'result.html', {'log4j_strings': log4j_strings})
+                return render(request, 'result.html', {'log4j_strings': log4j_strings})
             else:
                 print("Pattern not found")
 
             # Read contents of the uploaded file
     return render(request, 'scan_log4j.html')
-
-
-
-# def scan_log4j(request):
-#     if request.method == 'POST':
-#         ip_address = request.POST.get('ip_address')
-#         if ip_address:
-#             try:
-#                 # Open a socket to the target IP address on port 443
-#                 context = ssl.create_default_context()
-#                 with socket.create_connection((ip_address, 443)) as sock:
-#                     with context.wrap_socket(sock, server_hostname=ip_address) as ssock:
-#                         # Send a test request to the server
-#                         ssock.sendall(b"GET / HTTP/1.1\r\nHost: " + ip_address.encode('utf-8') + b"\r\n\r\n")
-#                         response = ssock.recv(1024)
-#                         # Check if the response contains the string "Apache Log4j"
-#                         if b"Apache Log4j" in response:
-#                             return HttpResponse("IP address is vulnerable")
-#                             # return render(request, 'vulnerable.html', {'ip_address': ip_address})
-#                         else:
-#                             return HttpResponse("IP address is not vulnerable")
-#                             # return render(request, 'not_vulnerable.html', {'ip_address': ip_address})
-#             except Exception as e:
-#                 # An exception occurred, so the IP address is likely not vulnerable
-#                 return HttpResponse("IP address is not vulnerable excep")
-#                 #return render(request, 'not_vulnerable.html', {'ip_address': ip_address})
-#     return render(request, 'scan_log4j.html')
-
-
-def log4_check(request):
-    if request.method=='POST':
-        text_input = request.POST.get('text_input')
-        result = Log4jScanner.url_list(text_input)
-        if result['vulnerable']:
-            return HttpResponse("This is malicious text")
-        else:
-            return HttpResponse("This is proper text")
-
-    return render(request, 'log4_check.html')
 
 @login_required(login_url='login')
 def HomePage(request):
@@ -199,7 +139,7 @@ def LogoutPage(request):
     logout(request)
     return redirect('login')
 
-def send_email(request):
+def send_email(message):
     # set up the SMTP connection
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
@@ -213,7 +153,7 @@ def send_email(request):
     sender = 'robindias2007@gmail.com'
     recipient = 'robindias2007@gmail.com'
     subject = 'Test email'
-    body = 'This is a test email sent from Python!'
+    body = message
     message = f"From: {sender}\nTo: {recipient}\nSubject: {subject}\n\n{body}"
 
     # send the email
@@ -223,38 +163,86 @@ def send_email(request):
     smtp_connection.quit()
     return HttpResponse("EMAIL SENT")
 
+@user_passes_test(is_admin)
+# define a function to check for log4j vulnerability
+def check_log4j_vulnerability(container):
+    # get container ID
+    container_id = container.short_id
+    # run a command in the container to check for the vulnerability
+    #cmd1 = f"docker exec {container_id} bash -c 'sudo grep -r org.apache.log4j /'"
+    cmd = f"docker exec {container_id} bash -c \"grep -r 'log4j\.[1-2][a-zA-Z]*\s*=' /var/log/\""
+    #docker logs < container - name - or -id > | grep < search - term >
 
-def ec2_instance_list(request):
+    result = os.system(cmd)
+    print("Vulnerability checking....")
+    # return True if vulnerability is found, else False
+    return result == 0
 
-    ec2_client = session.client('ec2')
-    ec2_instance_id = 'i-0a5a0f239993d1666'
-    response = ec2_client.describe_instances(InstanceIds=[ec2_instance_id])
-    ec2_public_ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
-    ec2_private_key_path = '/Users/robindias/Desktop/Project/CyberSecurity/server_key.cer'
 
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(hostname=ec2_public_ip, username='ec2-user', key_filename=ec2_private_key_path)
-    stdin, stdout, stderr = ssh_client.exec_command('docker ps -a')
+def check_containers_for_log4_vulnerability(request):
+    # create a client to communicate with the Docker daemon
+    client = docker.from_env()
 
+    if request.method == 'POST':
+        container_id = request.POST.get('container_id')
+        container = client.containers.get(container_id)
+        container.remove(force=True)
+        return redirect('check_containers_for_log4_vulnerability')
+
+    # get a list of all containers and their statuses
+    containers = client.containers.list(all=True)
+
+    # create a list to store container information
     container_info = []
 
-    for line in stdout:
-        fields = line.strip().split()
-        if fields[0] != 'CONTAINER':
-            container_id = fields[0]
-            container_name = fields[-1]
-            container_os = fields[1]
-            container_status = fields[7]
-            container_dict = {
-                'id': container_id,
-                'name': container_name,
-                'os' : container_os,
-                'status': container_status,
-            }
+    for container in containers:
+        # get container details
+        container_id = container.short_id
+        container_name = container.name
+        container_status = container.status
+        container_created = container.attrs['Created']
+        container_image = container.attrs['Config']['Image']
+        container_ports = container.attrs['HostConfig']['PortBindings']
+        #container_networks = container.attrs['NetworkSettings']['Networks']
+        container_stats = container.stats(stream=False)
+        cpu_total_usage = container_stats['cpu_stats']['cpu_usage']['total_usage'] # calculate CPU usage
+        num_cpu_cores = psutil.cpu_count() # Get the number of CPU cores on the host system
+        cpu_percent = (cpu_total_usage / num_cpu_cores) * 100
 
-            container_info.append(container_dict)
+        # create dictionary of container information
+        container_dict = {
+            'id': container_id,
+            'name': container_name,
+            'status': container_status,
+            'created': container_created,
+            'image': container_image,
+            'ports': container_ports,
+            # 'networks': container_networks,
+            # 'cpu_usage': round(cpu_percent, 2),
+            # 'mem_usage': f'{mem_usage / (1024 * 1024):.2f} MB',
+            # 'mem_limit': f'{mem_limit / (1024 * 1024):.2f} MB',
+            # 'mem_percent': round(mem_percent, 2)
+        }
 
-    ssh_client.close()
-    return render(request, 'ec2_instance_list.html', {'container_info': container_info})
+        # check for log4j vulnerability
+        if check_log4j_vulnerability(container):
+            # if vulnerability is found, delete the container and its associated image
+            print(f"Log4j vulnerability found in container {container_id}, deleting container and associated image...")
+            container.remove(force=True)
+            client.images.remove(container_image, force=True)
+            # add information about the deleted container to the container_info list
+            container_dict['vulnerability'] = 'log4j'
+            container_dict['status'] = 'deleted'
+            message = f"System {container.short_id} and {container.name} is under serious threat"
+            send_email(message)
+        else:
+            # if vulnerability is not found, add container information to the container_info list
+            container_dict['vulnerability'] = 'Log4j strings not found'
+            message = f"System {container.short_id} and {container.name} is safe and secure"
+            send_email(message)
 
+
+        # append container information to list
+        container_info.append(container_dict)
+
+    return render(request, 'check_containers_for_log4_vulnerability.html', {'container_info': container_info})

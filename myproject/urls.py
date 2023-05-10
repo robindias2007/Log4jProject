@@ -24,9 +24,8 @@ urlpatterns = [
     path('home/', views.HomePage,name='home'),
     path('logout/', views.LogoutPage,name='logout'),
     path('scan_log4j/', views.scan_log4j,name='scan_log4j'),
-    path('log4_check/', views.log4_check,name='log4_check'),
-    path('ec2_instance_list/', views.ec2_instance_list,name='ec2_instance_list'),
-    path('send_email/', views.send_email,name='send_email')
+    path('send_email/', views.send_email,name='send_email'),
+    path('check_containers_for_log4_vulnerability/', views.check_containers_for_log4_vulnerability,name='check_containers_for_log4_vulnerability'),
 ]
 
 # urlpatterns = [
